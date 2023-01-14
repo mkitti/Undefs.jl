@@ -21,22 +21,22 @@ module Undefs
     Create an Array, with element type T, of undefined elements with size
     specified by dims. See also fill, ones, zero.
 
-    ```jldoctest
+    ```julia
     julia> undefs(3, 2)
     3×2 Matrix{Float64}:
-    [...]
+    ...
 
     julia> undefs(Int, 4, 5)
     4×5 Matrix{Int64}:
-    [...]
+    ...
 
     julia> undefs(Int8, (1,2,3))
     1×2×3 Array{Int8, 3}:
-    [...]
+    ...
 
     julia> undefs(Int8, (2,3))
     2×3 Matrix{Int8}:
-    [...]
+    ...
 
     julia> fill!(undefs(Int8, (2,3)), 0)
     2×3 Matrix{Int8}:
