@@ -1,7 +1,12 @@
 """
     Undefs
 
-    See [`undefs`](@ref)
+    See [`undefs`](@ref) which is a convenience method for
+    `Array{T}(undef, dims...)` which is recommended over using this package.
+
+    Also consider alternatives such as
+    [ArrayAllocators.jl](https://github.com/mkitti/ArrayAllocators.jl] which
+    provides as `ArrayAllocators.zeros` method offering similar performance.
 """
 module Undefs
     export undefs
@@ -19,32 +24,19 @@ module Undefs
     ```jldoctest
     julia> undefs(3, 2)
     3×2 Matrix{Float64}:
-     1.42603e-105  1.42603e-105
-     1.42603e-105  1.42603e-105
-     1.42603e-105  1.42603e-105
+    [...]
 
     julia> undefs(Int, 4, 5)
     4×5 Matrix{Int64}:
-     0  0  0  0  0
-     0  0  0  0  0
-     0  0  0  0  0
-     0  0  0  0  0
+    [...]
 
     julia> undefs(Int8, (1,2,3))
     1×2×3 Array{Int8, 3}:
-    [:, :, 1] =
-     0  0
-
-    [:, :, 2] =
-     0  0
-
-    [:, :, 3] =
-     0  0
+    [...]
 
     julia> undefs(Int8, (2,3))
     2×3 Matrix{Int8}:
-     -96  119   60
-     103  -15  127
+    [...]
 
     julia> fill!(undefs(Int8, (2,3)), 0)
     2×3 Matrix{Int8}:
@@ -56,7 +48,7 @@ module Undefs
     recommended to use the above invocation since it allows array types other
     than `Array` to be constructed via similar syntax.
 
-    See also `fill!`, `zeros`, `ones`
+    See also `fill!`, `zeros`, `ones`, `ArrayAllocators.zeros`
     """
     undefs(::Type{T}, dims::IDims) where T = Array{T}(undef, dims)
     undefs(dims::IDims) = undefs(Float64, dims)
