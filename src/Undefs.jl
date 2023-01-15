@@ -9,10 +9,11 @@
     provides as `ArrayAllocators.zeros` method offering similar performance.
 """
 module Undefs
-    export undefs
-
+    export undefs, undef!
 
     const IDims = Tuple{Vararg{<: Integer}}
+
+    struct Undef end
 
     """
         undefs([T=Float64], dims::Tuple)
@@ -54,4 +55,21 @@ module Undefs
     undefs(dims::IDims) = undefs(Float64, dims)
     undefs(::Type{T}, dims::Integer...) where T = undefs(T, dims)
     undefs(dims::Integer...) = undefs(Float64, dims)
+
+    include("JLArray.jl")
+
+    """
+        undef!(array::Array, index=1)
+
+    Reset an element of an array to be `#undef`.
+    """
+    function undef!(array::Array, index::Integer=1)
+        jla = JLArray(array)
+        if jla.ptrarray
+            ptr = Ptr{Ptr{Nothing}}(pointer(array))
+            unsafe_store!(ptr, C_NULL, index)
+        else
+            throw(ArgumentError("Cannot apply `undef!` to an array that is not a pointer array"))
+        end
+    end
 end
