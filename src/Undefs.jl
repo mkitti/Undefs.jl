@@ -9,7 +9,7 @@
     provides as `ArrayAllocators.zeros` method offering similar performance.
 """
 module Undefs
-    export undefs, undef!
+    export undefs, undef!, @undef!
 
     const IDims = Tuple{Vararg{<: Integer}}
 
@@ -64,12 +64,32 @@ module Undefs
     Reset an element of an array to be `#undef`.
     """
     function undef!(array::Array, index::Integer=1)
-        jla = JLArray(array)
-        if jla.ptrarray
-            ptr = Ptr{Ptr{Nothing}}(pointer(array))
-            unsafe_store!(ptr, C_NULL, index)
+        checkbounds(array, index)
+        _undef!(array, index)
+    end
+
+    function undef!(array::Array, I::Integer...)
+        checkbounds(array, I...)
+        _undef!(array, LinearIndices(array)[I...])
+    end
+
+    # undef! without any bounds checking
+    function _undef!(array::Array, index::Integer=1)
+        if isptrarray(array)
+            GC.@preserve array begin
+                ptr = Ptr{Ptr{Nothing}}(pointer(array))
+                unsafe_store!(ptr, C_NULL, index)
+            end
         else
             throw(ArgumentError("Cannot apply `undef!` to an array that is not a pointer array"))
         end
+        return nothing
+    end
+
+    macro undef!(ex)
+        ex.head == :ref || throw(ArgumentError("@undef! can only be applied to array linear indexing expression"))
+        args = esc.(ex.args)
+        ex_out = Expr(:call, undef!, args...)
+        return ex_out
     end
 end

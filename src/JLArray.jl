@@ -27,4 +27,7 @@ Base.propertynames(x::JLArray) = (
 JLArray(array::Array) =
     unsafe_load(Ptr{JLArray}(pointer(array) - sizeof(JLArray)))
 
-
+function isptrarray(array::Array)
+    jla = JLArray(array)
+    return jla.ptrarray
+end
