@@ -5,4 +5,5 @@ using Test
     include("undefs.jl")
     include("undefbang.jl")
     include("gctest.jl")
+    include("jlarray.jl")
 end

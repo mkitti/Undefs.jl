@@ -24,8 +24,14 @@ Base.propertynames(x::JLArray) = (
     :maxsize, :how, :ndims, :pooled, :ptrarray, :hasptr, :isshared, :isaligned
 )
 
-JLArray(array::Array) =
-    unsafe_load(Ptr{JLArray}(pointer(array) - sizeof(JLArray)))
+function JLArray(array::Array)
+    GC.@preserve array begin
+        ptr = pointer(array)
+        jla = unsafe_load(Ptr{JLArray}(pointer_from_objref(array)))
+        @assert jla.data == ptr
+        jla
+    end
+end
 
 function isptrarray(array::Array)
     jla = JLArray(array)
