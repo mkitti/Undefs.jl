@@ -22,7 +22,7 @@ GC.gc()
 
 sleep(1)
 
-@testset "GC test" begin
+@testset "Garbage collection test" begin
     @test gclog2[5]
     @test gclog2[1]
 end

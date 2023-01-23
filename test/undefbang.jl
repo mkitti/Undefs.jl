@@ -3,17 +3,17 @@ using Undefs
 
 const gclog = falses(5)
 
-@testset "undef!" begin
-    mutable struct Foo
-        function Foo(i)
-            self = new()
-            finalizer(self) do x
-                gclog[i] = true
-                # @async @show i
-            end
+mutable struct Foo
+    function Foo(i)
+        self = new()
+        finalizer(self) do x
+            gclog[i] = true
+            # @async @show i
         end
     end
+end
 
+@testset "undef!" begin
     A = Array{Foo}(undef, 5)
     @test !isassigned(A, 3)
     A .= [Foo(i) for i in eachindex(A)]
@@ -44,5 +44,6 @@ end
 GC.gc()
 
 sleep(1)
-
-@test gclog[3]
+@testset "undef! garbage collection" begin
+    @test gclog[3]
+end
