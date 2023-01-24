@@ -39,6 +39,13 @@ end
     @test isassigned(B, 3, 2)
     @undef! B[3,2]
     @test !isassigned(B, 3, 2)
+
+    R = Ref{Foo}()
+    @test !isassigned(R)
+    R[] = Foo(1)
+    @test isassigned(R)
+    @undef! R[]
+    @test !isassigned(R)
 end
 
 GC.gc()

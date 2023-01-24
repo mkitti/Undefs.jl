@@ -10,14 +10,18 @@
 """
 module Undefs
     export undefs, undef!, @undef!
+    
+    include("JLArrays.jl")
+
+    using .JLArrays: JLArray, isptrarray
 
     const IDims = Tuple{Vararg{<: Integer}}
 
     struct Undef end
 
     """
-        undefs([T=Float64], dims::Tuple)
-        undefs([T=Float64], dims::Integer...)
+        undefs([A=Array], [T=Float64], dims::Tuple)
+        undefs([A=Array], [T=Float64], dims::Integer...)
 
     Create an Array, with element type T, of undefined elements with size
     specified by dims. See also fill, ones, zero.
@@ -56,7 +60,17 @@ module Undefs
     undefs(::Type{T}, dims::Integer...) where T = undefs(T, dims)
     undefs(dims::Integer...) = undefs(Float64, dims)
 
-    include("JLArray.jl")
+    undefs(::Type{A}, ::Type{T}, dims::IDims) where {T, A <: AbstractArray{T}} = A(undef, dims)
+    undefs(::Type{A}, ::Type{T}, dims::Integer...) where {T, A <: AbstractArray{T}} = A(undef, dims)
+
+    undefs(::Type{A}, ::Type{T2}, dims::IDims) where {T, T2, A <: AbstractArray{T}} =
+        throw(ArgumentError("Cannot create an array of type $A with elements of type $T2"))
+    undefs(::Type{A}, ::Type{T2}, dims::Integer...) where {T, T2, A <: AbstractArray{T}} =
+        throw(ArgumentError("Cannot create an array of type $A with elements of type $T2"))
+    
+    undefs(::Type{A}, ::Type{T}, dims::IDims) where {T, A <: AbstractArray} = A{T}(undef, dims)
+    undefs(::Type{A}, ::Type{T}, dims::Integer...) where {T, A <: AbstractArray} = A{T}(undef, dims)
+
 
     """
         undef!(array::Array, index=1)
@@ -86,8 +100,28 @@ module Undefs
         return nothing
     end
 
+    """
+        undef!(ref::Base.RefValue{T}) where T
+
+    Reset the target of a `Ref` to be `#undef`.
+    """
+    function undef!(ref::Base.RefValue{T}) where T
+        if !Base.allocatedinline(T)
+            ptr = Ptr{Ptr{Nothing}}(pointer_from_objref(ref))
+            unsafe_store!(ptr, C_NULL)
+        else
+            error("Cannot undef! a Ref of a type, $T, that is allocated inline.")
+        end
+    end
+
+    """
+        @undef! array[i]
+        @undef! ref[]
+
+    Reset the indexed element to be `#undef`.
+    """
     macro undef!(ex)
-        ex.head == :ref || throw(ArgumentError("@undef! can only be applied to array linear indexing expression"))
+        ex.head == :ref || throw(ArgumentError("@undef! can only be applied to an array or reference indexing expression"))
         args = esc.(ex.args)
         ex_out = Expr(:call, undef!, args...)
         return ex_out

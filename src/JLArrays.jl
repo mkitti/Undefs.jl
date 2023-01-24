@@ -1,3 +1,7 @@
+module JLArrays
+
+export JLArray, isptrarray
+
 struct JLArray{O}
     data::Ptr{Nothing}
     length::Csize_t
@@ -58,4 +62,6 @@ JLArray(array::Array) = JLArray{Nothing}(array)
 function isptrarray(array::Array)
     jla = JLArray(array)
     return jla.ptrarray
+end
+
 end

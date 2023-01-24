@@ -6,6 +6,8 @@
 
 This is a convenience package for constructing and working with Julia Arrays with undefined elements. I strongly urge you to seek alternatives which may be as performant as the methods provided in this package while still being as performant. In particular, consider [`ArrayAllocators.zeros`](https://github.com/mkitti/ArrayAllocators.jl) or `ArrayAllocators.calloc`.
 
+# `undefs` array construction
+
 The standard syntax in Julia for creating an array with undefined elements, also called an "empty array" in some languages, is the following.
 
 ```julia
@@ -27,7 +29,7 @@ C = undefs(4, 5) # uses a Float64 element type
 
 This package is for convenience only. I recommend using the standard syntax over using this package or seeking alternatives (see below). The standard syntax allows you to construct other types of arrays and or other similar parameterized types in a similar fashion. Alternatives may be as performant and safer to use than this package.
 
-# Alternatives
+## Alternatives to `undefs` array construction
 
 `undefs`, while convenient, can be treacherous. Novices may easily confuse the method with producing a similar result to `zeros`, which eagerly and explicitly fills the array with zeros. `undefs` makes no guarantee what the resulting array will contain. Used incorrectly, `undefs` can lead to incorrect code that may not be easily detectable since `undefs` often returns arrays with all zero values.
 
@@ -46,4 +48,64 @@ julia> @time Array{Int}(calloc, 2048, 2048);
 
 julia> @time undefs(Int, 2048, 2048);
   0.000046 seconds (2 allocations: 32.000 MiB)
+```
+
+# Experimental: Resetting elements of arrays and references to `#undef`
+
+This package also includes experimental support for resetting elements of arrays and referenes to `#undef`.
+
+This can be done via the `undef!` function or the `@undef!` macro.
+
+```julia
+julia> mutable struct Foo end
+
+julia> A = Array{Foo}(undef, 2)
+2-element Vector{Foo}:
+ #undef
+ #undef
+
+julia> A[1] = Foo()
+Foo()
+
+julia> isassigned(A, 1)
+true
+
+julia> @undef! A[1]
+
+julia> A
+2-element Vector{Foo}:
+ #undef
+ #undef
+
+julia> isassigned(A, 1)
+false
+```
+
+This is highly experimental and depends on Julia private internals which may change between private versions.
+Currently this package is tested through Julia 1.9.0-beta3.
+
+## Alternatives to `undefs!`
+
+Rather than using `undefs!` which is experimental and relies on Julia private internals, considering using a union type with `Nothing`.
+
+```julia
+julia> A = Array{Union{Foo,Nothing}}(nothing, 2)
+2-element Vector{Union{Nothing, Foo}}:
+ nothing
+ nothing
+
+julia> A[1] = Foo()
+Foo()
+
+julia> A
+2-element Vector{Union{Nothing, Foo}}:
+ Foo()
+ nothing
+
+julia> A[1] = nothing
+
+julia> A
+2-element Vector{Union{Nothing, Foo}}:
+ nothing
+ nothing
 ```
