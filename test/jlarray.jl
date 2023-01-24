@@ -16,7 +16,9 @@ using Test
     @test jla.ncols == 3
     @test jla.nrows == 5
     @test jla.ndims == 2
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test !jla.isshared
     @test jla.isaligned
 
@@ -29,7 +31,9 @@ using Test
     @test jla.ncols == 4
     @test jla.nrows == 7
     @test jla.ndims == 2
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test !jla.isshared
     @test jla.isaligned
 
@@ -42,7 +46,9 @@ using Test
     @test jla.maxsize == 9
     @test jla.nrows == 9 
     @test jla.ndims == 1
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test !jla.isshared
     @test jla.isaligned
 
@@ -55,7 +61,9 @@ using Test
     @test jla.ncols == 4
     @test jla.nrows == 3
     @test jla.ndims == 3
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test !jla.isshared
     @test jla.isaligned
 
@@ -70,7 +78,9 @@ using Test
     @test jla.ncols == 32
     @test jla.nrows == 8
     @test jla.ndims == 2
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test jla.isshared
     @test !jla.isaligned
 
@@ -84,9 +94,9 @@ using Test
     @test jla.ncols == 2
     @test jla.nrows == 8
     @test jla.ndims == 5
-    @test !jla.hasptr
+    @static if VERSION ≥ v"1.4"
+        @test !jla.hasptr
+    end
     @test jla.isshared
     @test !jla.isaligned
-
-
 end
