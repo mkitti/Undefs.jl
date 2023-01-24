@@ -76,6 +76,9 @@ module Undefs
         undef!(array::Array, index=1)
 
     Reset an element of an array to be `#undef`.
+
+    The method is highly experimental and uses undocumented internal details
+    which may change.
     """
     function undef!(array::Array, index::Integer=1)
         checkbounds(array, index)
@@ -100,13 +103,23 @@ module Undefs
         return nothing
     end
 
+    @static if !isdefined(Base, :allocatedinline)
+        allocatedinline(::Type{T}) where T = T.isinlinealloc
+        allocatedinline(U::Union) = Base.isbitsunion(U)
+    else
+        using Base: allocatedinline
+    end
+
     """
         undef!(ref::Base.RefValue{T}) where T
 
     Reset the target of a `Ref` to be `#undef`.
+
+    The method is highly experimental and uses undocumented internal details
+    which may change.
     """
     function undef!(ref::Base.RefValue{T}) where T
-        if !Base.allocatedinline(T)
+        if !allocatedinline(T)
             ptr = Ptr{Ptr{Nothing}}(pointer_from_objref(ref))
             unsafe_store!(ptr, C_NULL)
         else
@@ -119,6 +132,9 @@ module Undefs
         @undef! ref[]
 
     Reset the indexed element to be `#undef`.
+
+    The underlying method is highly experimental and uses undocumented internal
+    details which may change.
     """
     macro undef!(ex)
         ex.head == :ref || throw(ArgumentError("@undef! can only be applied to an array or reference indexing expression"))

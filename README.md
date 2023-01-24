@@ -4,7 +4,9 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://mkitti.github.io/Undefs.jl/dev/)
 [![Build Status](https://github.com/mkitti/Undefs.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mkitti/Undefs.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This is a convenience package for constructing and working with Julia Arrays with undefined elements. I strongly urge you to seek alternatives which may be as performant as the methods provided in this package while still being as performant. In particular, consider [`ArrayAllocators.zeros`](https://github.com/mkitti/ArrayAllocators.jl) or `ArrayAllocators.calloc`.
+Undefs.jl is a convenience and educational package for constructing and working with Julia Arrays with undefined elements. This package is not intended for production code.
+
+I strongly urge you to seek alternatives which may be as performant as the methods provided in this package while being as effective and supported. In particular, consider [`ArrayAllocators.zeros`](https://github.com/mkitti/ArrayAllocators.jl) or `ArrayAllocators.calloc` if you need fast and safe array initialization. If you are interested in resetting an element to `#undef`, consider using a `Union{T,Nothing}` instead as an element type and using `nothing` to "unset" elements. The alternatives are discussed in more detail below.
 
 # `undefs` array construction
 
@@ -50,7 +52,17 @@ julia> @time undefs(Int, 2048, 2048);
   0.000046 seconds (2 allocations: 32.000 MiB)
 ```
 
-# Experimental: Resetting elements of arrays and references to `#undef`
+## Discussion of `undefs`
+
+The desire for a method called `undefs` originates from the existence of similar methods such as `zeros`, `ones`, `trues`, and `falses`. These are convenience methods that eagerly allocate and initialize the arrays they construct. Array construction via `Array{T}(undef, dims)` outperforms these methods because it does *not* do any array initialization. The resulting array may be full of arbitrary values. At times this can deceiving because the returned element values may be all zeros early in a Julia session. This behavior cannot be consistently relied upon as subsequent invocations will yield arrays filled with values other than zero. Arrays allocated in this manner can be eagerly initialized via the `fill!` method. `fill!` is used to implement the convenience methods.
+
+The syntax `Array{T}(undef, dims)` allows for the selection of an array type, an element type, and the dimensions of the array. It also clearly indicates that the values will be undefined. Critics of this syntax may find it verbose. In particular, the introduction of curly braces for the array element type parameter may be unfamiliar to new users of Julia and contrasts with the simplicity of the convenience methods mentioned earlier that use a procedural syntax common among many programming languages. Those convenience methods assume a default array type, `Array`, and a default element type, `Float64`, reducing the verbosity. An `undefs` method could make similar assumptions as it does here.
+
+The arguments for not including an `undefs` method in `Base` include introducing the type parameter syntax, discouraging use of uninitialized arrays by new users of Julia, and encouarging the consideration of other array types. The arguments contrast with the continued existence of the convenience methods, which may be less performant.
+
+This package exports the convenience method `undefs` to advance the conversation on this topic while also leading users to the supported alternatives. By providing a package that provides this functionality the debate is no longer about the existence of `undefs` but whether such as method should be in `Base` or if its existence in a package such as this is useful.
+
+# Experimental: Resetting elements of arrays and references to `#undef` via `undef!` and `@undef!`
 
 This package also includes experimental support for resetting elements of arrays and referenes to `#undef`.
 
@@ -81,8 +93,8 @@ julia> isassigned(A, 1)
 false
 ```
 
-This is highly experimental and depends on Julia private internals which may change between private versions.
-Currently this package is tested through Julia 1.9.0-beta3.
+This is highly experimental and depends on Julia private internals which may change between minor versions of Julia.
+Currently, this package is tested from Julia 1.0.5 through Julia 1.9.0-beta3 in limited circumstances. Use at your own risk.
 
 ## Alternatives to `undefs!`
 
@@ -109,3 +121,11 @@ julia> A
  nothing
  nothing
 ```
+
+## Discussion of `undefs!`
+
+`undefs!` depends on array layout details that are not intended to be exposed as part of the public interface of Julia. `#undef` occurs when Julia uses an array of pointers layout for arrays of elements of mutable or non-concrete types. An `#undef` indicates that those pointers are `NULL` pointers that point to nothing. Arrays of primitives or immutable bitstypes are in contrast laid out using an inline layout without indirection.
+
+This package reads the internal array layout details to determine when an array of pointers layout is used. To return an element to an `#undef` state, `undef!` sets the corresponding pointer to be a `NULL` pointer, `C_NULL` or `Ptr{Nothing} @0x0000000000000000`. Problems can arise if this package incorrectly determines the layout type of the array.
+
+Due to the use of internal array layout details, `undefs!` should be considered highly experimental. It's implementation here is mainly to elucidate the internal Julia array structure for educational purposes.
