@@ -15,7 +15,7 @@ module Undefs
 
     using .JLArrays: JLArray, isptrarray
 
-    const IDims = Tuple{Vararg{<: Integer}}
+    const IDims = Tuple{Vararg{Integer}}
 
     struct Undef end
 
@@ -81,7 +81,6 @@ module Undefs
     which may change.
     """
     function undef!(array::Array, index::Integer=1)
-        checkbounds(array, index)
         _undef!(array, index)
     end
 
@@ -91,7 +90,12 @@ module Undefs
     end
 
     # undef! without any bounds checking
-    function _undef!(array::Array, index::Integer=1)
+    @inline function _undef!(array::Array, index::Integer=1)
+        Base._unsetindex!(array, index)
+    end
+
+    # old definition, without any bounds checking
+    function _old_undef!(array::Array, index::Integer=1)
         if isptrarray(array)
             GC.@preserve array begin
                 ptr = Ptr{Ptr{Nothing}}(pointer(array))

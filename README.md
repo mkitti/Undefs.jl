@@ -94,7 +94,7 @@ false
 ```
 
 This is highly experimental and depends on Julia private internals which may change between minor versions of Julia.
-Currently, this package is tested from Julia 1.0.5 through Julia 1.9.0-beta3 in limited circumstances. Use at your own risk.
+Currently, this package is tested from Julia 1.0.5 through Julia 1.9.0 in limited circumstances. Use at your own risk.
 
 ## Alternatives to `undefs!`
 
@@ -129,3 +129,5 @@ julia> A
 This package reads the internal array layout details to determine when an array of pointers layout is used. To return an element to an `#undef` state, `undef!` sets the corresponding pointer to be a `NULL` pointer, `C_NULL` or `Ptr{Nothing} @0x0000000000000000`. Problems can arise if this package incorrectly determines the layout type of the array.
 
 Due to the use of internal array layout details, `undefs!` should be considered highly experimental. It's implementation here is mainly to elucidate the internal Julia array structure for educational purposes.
+
+In version 0.3, this package now uses `Base._unsetindex!` for the array implementation.
